@@ -149,6 +149,11 @@ class App(tb.Window):
         This method retrieves the tasks from the tasks module and updates the display
         by creating task widgets for each task.
         """
+        # Save the timers for each task before destroying the old frame and adding in the tasks
+        for task_id in self.task_timers:
+            self.toggle_timer(task_id)
+            print("timers saved")
+
         # Check if scrolled frame exists and destroy it if it does
         if hasattr(self, "task_frame_area"):
             self.task_frame_area.pack_forget()
