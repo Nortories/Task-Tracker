@@ -1,1 +1,44 @@
-{"tasks": [{"title": "Buy groceries", "description": "Go to the supermarket and buy fruits, vegetables, and milk.", "taskID": 1, "timer": "2:30:56", "completed": false}, {"title": "Finish coding assignment", "description": "Complete the coding assignment by implementing the required features.", "taskID": 2, "timer": "1:45:24", "completed": false}, {"title": "Call mom", "description": "Give mom a call to catch up and see how she's doing.", "taskID": 3, "timer": "0:15:26", "completed": false}, {"title": "Prepare presentation", "description": "Create a presentation for the upcoming meeting and gather all the necessary materials.", "taskID": 4, "timer": "3:00:22", "completed": false}, {"title": "Go for a run", "description": "Put on your running shoes and go for a jog in the park.", "taskID": 5, "timer": "0:45:11", "completed": false}, {"title": "324", "description": "234", "taskID": 6, "timer": "0:00:05", "completed": true}, {"title": "12345", "description": "", "taskID": 7, "timer": "00:00:00", "completed": true}]}
+{
+  "tasks": [
+    {
+      "title": "Buy groceries",
+      "description": "Go to the supermarket and buy fruits, vegetables, and milk.",
+      "taskID": 1,
+      "timer": "2:31:11",
+      "time_goal": "3:43:00",
+      "completed": false
+    },
+    {
+      "title": "Finish coding assignment",
+      "description": "Complete the coding assignment by implementing the required features.",
+      "taskID": 2,
+      "timer": "1:45:30",
+      "time_goal": "1:50:23",
+      "completed": false
+    },
+    {
+      "title": "Call mom",
+      "description": "Give mom a call to catch up and see how she's doing.",
+      "taskID": 3,
+      "timer": "0:15:34",
+      "time_goal": "1:01:00",
+      "completed": false
+    },
+    {
+      "title": "Prepare presentation",
+      "description": "Create a presentation for the upcoming meeting and gather all the necessary materials.",
+      "taskID": 4,
+      "timer": "3:00:27",
+      "time_goal": "6:45:11",
+      "completed": false
+    },
+    {
+      "title": "Go for a run",
+      "description": "Put on your running shoes and go for a jog in the park.",
+      "taskID": 5,
+      "timer": "0:15:00",
+      "time_goal": "0:30:00",
+      "completed": false
+    }
+  ]
+}

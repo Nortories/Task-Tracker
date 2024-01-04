@@ -59,10 +59,10 @@ class App(tb.Window):
         self.description_entry = tb.Entry(self.mainFrame)
         self.description_entry.pack(side="left")
 
-        time_for_task_label = tb.Label(self.mainFrame, text="Time for task")
-        time_for_task_label.pack(side="left")
-        self.time_for_task_entry = tb.Entry(self.mainFrame)
-        self.time_for_task_entry.pack(side="left")
+        time_goal_label = tb.Label(self.mainFrame, text="Time for task")
+        time_goal_label.pack(side="left")
+        self.time_goal_entry = tb.Entry(self.mainFrame)
+        self.time_goal_entry.pack(side="left")
 
         button_frame = tb.Frame(self)
         button_frame.pack(pady=5)
@@ -100,7 +100,7 @@ class App(tb.Window):
         """
         task_frame = tb.Frame(self.task_frame_area,
                               borderwidth=2, relief="groove")
-        task_frame.pack(padx=5, pady=5, fill="x")
+        task_frame.pack(padx=(5, 15), pady=5, fill="x")
 
         task_label = tb.Label(task_frame, text=task["title"])
         task_label.pack(side="top")
@@ -109,6 +109,10 @@ class App(tb.Window):
             task_frame, text="Description:   " + task["description"])
         task_description.pack(side="top")
 
+        goal_label = tb.Label(
+            task_frame, text="Goal:   " + task["time_goal"])
+        goal_label.pack(side="top")
+
         task_id = task["taskID"]
         self.task_timers[task_id] = {"label": tb.Label(task_frame, text=task["timer"]),
                                      "start_time": None,
@@ -116,11 +120,7 @@ class App(tb.Window):
                                      "timer_running": False}
         self.task_timers[task_id]["label"].pack()
 
-        # success colored solid progressbar style
-        progressbar = tb.Progressbar(task_frame, bootstyle="success-striped")
-        progressbar.pack(fill="x", padx=5, pady=5)
-        progressbar.start()
-        # progressbar.stop()
+        self.create_progressbar(task_frame, task)
 
         toggle_button = tb.Button(
             task_frame, text="Start Timer",
@@ -141,6 +141,26 @@ class App(tb.Window):
         checkbox = tk.Checkbutton(
             task_frame, text="Completed", variable=checkmark)
         checkbox.pack(side="right")
+
+
+    def create_progressbar(self, task_frame, task):
+        """
+        Creates a progress bar for a given task.
+
+        This method creates a progress bar based on the task's time goal and elapsed time.
+        """
+        progressbar = tb.Progressbar(
+            task_frame,
+            bootstyle="success-striped",
+            mode="determinate",
+            value=101)
+        progressbar.pack(fill="x", padx=5, pady=5)
+
+        time_goal = datetime.strptime(task["time_goal"], "%H:%M:%S")
+        time_elapsed = datetime.strptime(task["timer"], "%H:%M:%S")
+
+        progressbar["value"] = (((timedelta(hours=time_elapsed.hour, minutes=time_elapsed.minute, seconds=time_elapsed.second).total_seconds()) * 100) / (
+            (timedelta(hours=time_goal.hour, minutes=time_goal.minute, seconds=time_goal.second).total_seconds()) * 100) * 100)
 
     def update_display(self):
         """

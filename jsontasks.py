@@ -34,6 +34,7 @@ def add_task(title, description):
             "description": description,
             "taskID": last_task_id + 1,
             "timer": "00:00:00",
+            "time_goal": "00:00:00",
             "completed": True
         }
 
