@@ -1,1 +1,39 @@
-{"tasks": [{"title": "asdfasd", "description": "fasdf", "taskID": 1, "timer": "0:00:43", "completed": true}, {"title": "asd", "description": "asdf", "taskID": 2, "timer": "0:00:30", "completed": true}, {"title": "adsf", "description": "", "taskID": 3, "timer": "0:00:07", "completed": true}, {"title": "ngf", "description": "ngc", "taskID": 4, "timer": "0:00:06", "completed": true}, {"title": "cvzx", "description": "", "taskID": 5, "timer": "0:00:00", "completed": true}, {"title": "iytf", "description": "", "taskID": 6, "timer": "0:00:00", "completed": true}]}
+{
+  "tasks": [
+    {
+      "title": "Buy groceries",
+      "description": "Go to the supermarket and buy fruits, vegetables, and milk.",
+      "taskID": 1,
+      "timer": "2:30:44",
+      "completed": false
+    },
+    {
+      "title": "Finish coding assignment",
+      "description": "Complete the coding assignment by implementing the required features.",
+      "taskID": 2,
+      "timer": "1:45:17",
+      "completed": false
+    },
+    {
+      "title": "Call mom",
+      "description": "Give mom a call to catch up and see how she's doing.",
+      "taskID": 3,
+      "timer": "0:15:18",
+      "completed": false
+    },
+    {
+      "title": "Prepare presentation",
+      "description": "Create a presentation for the upcoming meeting and gather all the necessary materials.",
+      "taskID": 4,
+      "timer": "3:00:14",
+      "completed": false
+    },
+    {
+      "title": "Go for a run",
+      "description": "Put on your running shoes and go for a jog in the park.",
+      "taskID": 5,
+      "timer": "0:45:06",
+      "completed": false
+    }
+  ]
+}

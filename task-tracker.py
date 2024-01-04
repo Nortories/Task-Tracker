@@ -1,7 +1,7 @@
 import tkinter as tk
-import customtkinter
 import jsontasks as jsontasks
 import ttkbootstrap as tb
+from ttkbootstrap.scrolled import ScrolledFrame
 from datetime import datetime, timedelta
 
 
@@ -22,14 +22,15 @@ class App(tb.Window):
         getScreenHeight = (self.winfo_screenheight()-80)
         self.wm_geometry(
             f"600x{getScreenHeight}+{self.winfo_screenwidth()-610}+0")
-        
+
+        self.first_time = True
         self.popup_label_active = False
         self.dark_mode = False
-        
+        self.task_frame_area_has_been_packed = False
+        self.task_timers = {}  # Dictionary to store timer information for each task
+
         self.create_widgets()
         self.update_display()
-
-  
 
     def create_widgets(self):
         """
@@ -38,30 +39,30 @@ class App(tb.Window):
         This method creates labels and entry fields for task, description, and time,
         as well as a submit button.
         """
-        
-        mainFrame = tb.Frame(self)
-        mainFrame.pack(fill=tk.X, padx=5, pady=5)
-        tb.Style("cosmo")
-        dark_mode_button = tb.Button(mainFrame, text="Dark", width=5, command=self.toggle_dark_mode)
+
+        self.mainFrame = tb.Frame(self)
+        self.mainFrame.pack(fill=tk.X, padx=5, pady=5)
+
+        tb.Style("cosmo")  # Default theme
+
+        dark_mode_button = tb.Button(
+            self.mainFrame, text="Dark", width=5, command=self.toggle_dark_mode)
         dark_mode_button.pack(side="right")
 
-        title_label = tb.Label(mainFrame, text="Task")
+        title_label = tb.Label(self.mainFrame, text="Task")
         title_label.pack(side="left")
-        self.task_entry = tb.Entry(mainFrame)
+        self.task_entry = tb.Entry(self.mainFrame)
         self.task_entry.pack(side="left")
 
-        description_label = tb.Label(mainFrame, text="Description")
+        description_label = tb.Label(self.mainFrame, text="Description")
         description_label.pack(side="left")
-        self.description_entry = tb.Entry(mainFrame)
+        self.description_entry = tb.Entry(self.mainFrame)
         self.description_entry.pack(side="left")
 
-        time_for_task_label = tb.Label(mainFrame, text="Time for task")
+        time_for_task_label = tb.Label(self.mainFrame, text="Time for task")
         time_for_task_label.pack(side="left")
-        self.time_for_task_entry = tb.Entry(mainFrame)
+        self.time_for_task_entry = tb.Entry(self.mainFrame)
         self.time_for_task_entry.pack(side="left")
-
-
-        
 
         button_frame = tb.Frame(self)
         button_frame.pack(pady=5)
@@ -75,22 +76,21 @@ class App(tb.Window):
         self.left_frame = tb.Frame(self)
         self.left_frame.pack(side="left")
 
-        
-        self.task_timers = {}  # Dictionary to store timer information for each task
+        self.scrolled_frame = ScrolledFrame(self)
 
     def toggle_dark_mode(self):
-            """
-            Toggles the dark mode.
+        """
+        Toggles the dark mode.
 
-            This method toggles the dark mode for the application.
-            """
+        This method toggles the dark mode for the application.
+        """
 
-            if self.dark_mode == False:
-                tb.Style("darkly")
-                self.dark_mode = True
-            else:
-                tb.Style("cosmo")
-                self.dark_mode = False
+        if self.dark_mode == False:
+            tb.Style("darkly")
+            self.dark_mode = True
+        else:
+            tb.Style("cosmo")
+            self.dark_mode = False
 
     def create_task_widget(self, task):
         """
@@ -98,19 +98,19 @@ class App(tb.Window):
 
         This method creates a widget for a given task, including labels, checkboxes, and buttons.
         """
-        task_frame = tk.Frame(self.task_frame_area,
-                              bg="white", borderwidth=2, relief="groove")
-        task_frame.pack(padx=5, pady=5, fill=tk.X)
+        task_frame = tb.Frame(self.task_frame_area,
+                              borderwidth=2, relief="groove")
+        task_frame.pack(padx=5, pady=5, fill="x")
 
-        task_label = tk.Label(task_frame, bg="white", text=task["title"])
+        task_label = tb.Label(task_frame, text=task["title"])
         task_label.pack(side="top")
 
-        task_description = tk.Label(
-            task_frame, bg="white", text="Description:   " + task["description"])
+        task_description = tb.Label(
+            task_frame, text="Description:   " + task["description"])
         task_description.pack(side="top")
 
         task_id = task["taskID"]
-        self.task_timers[task_id] = {"label": tk.Label(task_frame, bg="white", text=task["timer"]),
+        self.task_timers[task_id] = {"label": tb.Label(task_frame, text=task["timer"]),
                                      "start_time": None,
                                      "elapsed_time": timedelta(),
                                      "timer_running": False}
@@ -118,7 +118,7 @@ class App(tb.Window):
 
         # success colored solid progressbar style
         progressbar = tb.Progressbar(task_frame, bootstyle="success-striped")
-        progressbar.pack(fill=tk.X, padx=5, pady=5)
+        progressbar.pack(fill="x", padx=5, pady=5)
         progressbar.start()
         # progressbar.stop()
 
@@ -149,21 +149,27 @@ class App(tb.Window):
         This method retrieves the tasks from the tasks module and updates the display
         by creating task widgets for each task.
         """
-        tasks = jsontasks.read_tasks()
-
-        # Destroy old task_frame if it exists (to prevent duplicate tasks on refresh)
+        # Check if scrolled frame exists and destroy it if it does
         if hasattr(self, "task_frame_area"):
+            self.task_frame_area.pack_forget()
             self.task_frame_area.destroy()
 
         # Create a frame to hold the task labels and pack it
-        self.task_frame_area = tk.Frame(self)
-        self.task_frame_area.pack(fill=tk.BOTH, expand=True)
+        self.task_frame_area = ScrolledFrame(self)
+        self.task_frame_area.pack(fill="both", expand=True)
 
-        # Create and pack new task labels with checkboxes inside the frame
-        for task in tasks:
+        # Create and pack new tasks inside the task_frame_area with checkboxes inside there frame
+        for task in jsontasks.read_tasks():
             self.create_task_widget(task)
 
         self.update_timer()
+
+        # Scroll to the bottom of the scroll area
+        if self.first_time:
+            self.first_time = False
+        else:
+            self.update_idletasks()
+            self.task_frame_area.yview_moveto(1.0)
 
     def toggle_timer(self, task_id):
         """
@@ -236,7 +242,8 @@ class App(tb.Window):
 
                     popup_label.pack(side="left")
                     self.popup_label_active = True
-                    self.after(5000, lambda: (popup_label.config(text=""), setattr(self, "popup_label_active", False)))
+                    self.after(5000, lambda: (popup_label.config(
+                        text=""), setattr(self, "popup_label_active", False)))
 
     # def remove_popup(self, label):
     #     """
