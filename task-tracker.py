@@ -1,11 +1,11 @@
 import tkinter as tk
 import customtkinter
-import tasks as t
+import jsontasks as jsontasks
+import ttkbootstrap as tb
 from datetime import datetime, timedelta
-from tasks import read_tasks
 
 
-class App(tk.Tk):
+class App(tb.Window):
     """
     The main application class for the Task Tracker.
     """
@@ -21,55 +21,135 @@ class App(tk.Tk):
         self.title("Task Tracker")
         getScreenHeight = (self.winfo_screenheight()-80)
         self.wm_geometry(
-            f"500x{getScreenHeight}+{self.winfo_screenwidth()-510}+0")
-        customtkinter.set_appearance_mode("system")
-        customtkinter.set_default_color_theme("dark-blue")
+            f"600x{getScreenHeight}+{self.winfo_screenwidth()-610}+0")
+        
+        self.popup_label_active = False
+        self.dark_mode = False
+        
         self.create_widgets()
-        self.display_tasks()
+        self.update_display()
+
+  
 
     def create_widgets(self):
         """
-        Creates the widgets for the main window.
+        Creates the widgets frame area for the main window.
 
         This method creates labels and entry fields for task, description, and time,
         as well as a submit button.
         """
-        container = tk.Frame(self)
-        container.pack(fill=tk.X, padx=5, pady=5)
+        
+        mainFrame = tb.Frame(self)
+        mainFrame.pack(fill=tk.X, padx=5, pady=5)
+        tb.Style("cosmo")
+        dark_mode_button = tb.Button(mainFrame, text="Dark", width=5, command=self.toggle_dark_mode)
+        dark_mode_button.pack(side="right")
 
-        title_label = tk.Label(container, text="Task")
+        title_label = tb.Label(mainFrame, text="Task")
         title_label.pack(side="left")
-        self.task_entry = tk.Entry(container)
+        self.task_entry = tb.Entry(mainFrame)
         self.task_entry.pack(side="left")
 
-        description_label = tk.Label(container, text="Description")
+        description_label = tb.Label(mainFrame, text="Description")
         description_label.pack(side="left")
-        self.description_entry = tk.Entry(container)
+        self.description_entry = tb.Entry(mainFrame)
         self.description_entry.pack(side="left")
 
-        self.warning_label = tk.Label(container)
-        self.warning_label.pack(side="top")
+        time_for_task_label = tb.Label(mainFrame, text="Time for task")
+        time_for_task_label.pack(side="left")
+        self.time_for_task_entry = tb.Entry(mainFrame)
+        self.time_for_task_entry.pack(side="left")
+
+
         
-        button_frame = tk.Frame(self)
+
+        button_frame = tb.Frame(self)
         button_frame.pack(pady=5)
-        self.submit_button = tk.Button(
-            button_frame, text="Submit", command=self.submit_task)
+        self.submit_button = tb.Button(
+            button_frame, text="Add task", command=self.submit_new_task)
         self.submit_button.pack(side="top")
 
-        self.left_frame = tk.Frame(self)
+        self.warning_label = tb.Label(button_frame)
+        self.warning_label.pack(side="left")
+
+        self.left_frame = tb.Frame(self)
         self.left_frame.pack(side="left")
 
-        self.popup_label_active = False
+        
         self.task_timers = {}  # Dictionary to store timer information for each task
 
-    def display_tasks(self):
-        """
-        Displays the tasks in the main window.
+    def toggle_dark_mode(self):
+            """
+            Toggles the dark mode.
 
-        This method retrieves the tasks from the tasks module and creates labels
-        for each task, displaying them in the main window.
+            This method toggles the dark mode for the application.
+            """
+
+            if self.dark_mode == False:
+                tb.Style("darkly")
+                self.dark_mode = True
+            else:
+                tb.Style("cosmo")
+                self.dark_mode = False
+
+    def create_task_widget(self, task):
         """
-        tasks = read_tasks()
+        Creates a task widget.
+
+        This method creates a widget for a given task, including labels, checkboxes, and buttons.
+        """
+        task_frame = tk.Frame(self.task_frame_area,
+                              bg="white", borderwidth=2, relief="groove")
+        task_frame.pack(padx=5, pady=5, fill=tk.X)
+
+        task_label = tk.Label(task_frame, bg="white", text=task["title"])
+        task_label.pack(side="top")
+
+        task_description = tk.Label(
+            task_frame, bg="white", text="Description:   " + task["description"])
+        task_description.pack(side="top")
+
+        task_id = task["taskID"]
+        self.task_timers[task_id] = {"label": tk.Label(task_frame, bg="white", text=task["timer"]),
+                                     "start_time": None,
+                                     "elapsed_time": timedelta(),
+                                     "timer_running": False}
+        self.task_timers[task_id]["label"].pack()
+
+        # success colored solid progressbar style
+        progressbar = tb.Progressbar(task_frame, bootstyle="success-striped")
+        progressbar.pack(fill=tk.X, padx=5, pady=5)
+        progressbar.start()
+        # progressbar.stop()
+
+        toggle_button = tb.Button(
+            task_frame, text="Start Timer",
+            command=lambda id=task_id: self.toggle_timer(id)
+        )
+        toggle_button.pack(side="left", padx=(5, 0), pady=(0, 5))
+
+        # Store the button reference
+        self.task_timers[task_id]["toggle_button"] = toggle_button
+
+        # Create a checkbox for each task
+        if task["completed"]:
+            checkmark = tk.BooleanVar(value=True)
+            print("task completed")
+        else:
+            checkmark = tk.BooleanVar(value=False)
+            print("task not completed")
+        checkbox = tk.Checkbutton(
+            task_frame, text="Completed", variable=checkmark)
+        checkbox.pack(side="right")
+
+    def update_display(self):
+        """
+        Updates the display of tasks.
+
+        This method retrieves the tasks from the tasks module and updates the display
+        by creating task widgets for each task.
+        """
+        tasks = jsontasks.read_tasks()
 
         # Destroy old task_frame if it exists (to prevent duplicate tasks on refresh)
         if hasattr(self, "task_frame_area"):
@@ -81,42 +161,7 @@ class App(tk.Tk):
 
         # Create and pack new task labels with checkboxes inside the frame
         for task in tasks:
-            self.task_frame = tk.Frame(self.task_frame_area, bg="white", borderwidth=2, relief="groove")
-            self.task_frame.pack(padx=5, pady=5, fill=tk.X)
-
-            task_label = tk.Label(
-                self.task_frame, bg="white", text=task["title"])
-            task_label.pack(side="top")
-            
-            task_description = tk.Label(
-                self.task_frame, bg="white", text="Description:   " + task["description"])
-            task_description.pack(side="top")
-
-            task_id = task["taskID"]
-            self.task_timers[task_id] = {"label": tk.Label(self.task_frame, bg="white", text=task["timer"]),
-                                         "start_time": None,
-                                         "elapsed_time": timedelta(),
-                                         "timer_running": False}
-            self.task_timers[task_id]["label"].pack()
-
-            toggle_button = tk.Button(
-            self.task_frame, text="Start Timer",
-            command=lambda id=task_id: self.toggle_timer(id)
-            )
-            toggle_button.pack(side="left")
-
-            # Store the button reference
-            self.task_timers[task_id]["toggle_button"] = toggle_button
-            
-            # Create a checkbox for each task
-            if task["completed"]:
-                checkmark = tk.BooleanVar(value=True)
-                print("task completed")
-            else:
-                checkmark = tk.BooleanVar(value=False)
-                print("task not completed")
-            checkbox = tk.Checkbutton(self.task_frame, text="Completed", variable=checkmark)
-            checkbox.pack(side="right")
+            self.create_task_widget(task)
 
         self.update_timer()
 
@@ -134,19 +179,22 @@ class App(tk.Tk):
             timer["elapsed_time"] += datetime.now() - timer["start_time"]
             timer["start_time"] = None
             timer["toggle_button"].config(text="Start Timer")
- 
-            t.update_task_time(task_id, str(timer["elapsed_time"]).split('.')[0])
+
+            jsontasks.update_task_time(task_id, str(
+                timer["elapsed_time"]).split('.')[0])
         else:
             timer["timer_running"] = True
             timer["start_time"] = datetime.now()
             # Ensure this is a timedelta object
-            elapsed_time_from_task = t.get_task_timer(task_id)
+            elapsed_time_from_task = jsontasks.get_task_timer(task_id)
             if isinstance(elapsed_time_from_task, datetime):
-                elapsed_time_from_task = timedelta(hours=elapsed_time_from_task.hour, minutes=elapsed_time_from_task.minute, seconds=elapsed_time_from_task.second)
+                elapsed_time_from_task = timedelta(
+                    hours=elapsed_time_from_task.hour, minutes=elapsed_time_from_task.minute, seconds=elapsed_time_from_task.second)
             timer["elapsed_time"] = elapsed_time_from_task
             timer["toggle_button"].config(text="Stop Timer")
-            t.update_task_time(task_id, str(timer["elapsed_time"]).split('.')[0])
-            
+            jsontasks.update_task_time(task_id, str(
+                timer["elapsed_time"]).split('.')[0])
+
     def update_timer(self):
         """
         Updates the timer labels for each task.
@@ -162,8 +210,7 @@ class App(tk.Tk):
                 timer["label"].config(text=formatted_duration)
         self.after(1000, self.update_timer)
 
-
-    def submit_task(self):
+    def submit_new_task(self):
         """
         Submits a new task.
 
@@ -175,29 +222,31 @@ class App(tk.Tk):
         description = self.description_entry.get()
 
         if task:
-            t.add_task(task, description)
+            jsontasks.add_task(task, description)
             self.task_entry.delete(0, tk.END)
             self.description_entry.delete(0, tk.END)
-            self.display_tasks()
+            self.update_display()
         else:
             if not self.popup_label_active:
 
                 if hasattr(self, "warning_label"):
                     popup_label = self.warning_label
-                    popup_label.config(text="Please enter a task.", fg="red")
+                    popup_label.config(
+                        text="Please enter a task.", foreground="red")
 
-                    popup_label.pack(side="top")
+                    popup_label.pack(side="left")
                     self.popup_label_active = True
-                    self.after(5000, lambda: self.remove_popup(popup_label))
+                    self.after(5000, lambda: (popup_label.config(text=""), setattr(self, "popup_label_active", False)))
 
-    def remove_popup(self, label):
-        """
-        Removes the error message popup.
+    # def remove_popup(self, label):
+    #     """
+    #     Removes the error message popup.
 
-        This method removes the error message label from the main window.
-        """
-        label.config(text="")
-        self.popup_label_active = False
+    #     This method removes the error message label from the main window.
+    #     """
+    #     label.config(text="")
+    #     self.popup_label_active = False
+
 
 def on_quit():
     """
