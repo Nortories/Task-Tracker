@@ -31,7 +31,7 @@ class App(tb.Window):
         self.progressbars = {}  # Dictionary to store progress bar information for each task
 
         self.create_widgets()
-        self.update_display()
+        self.after(1000, self.update_display)
 
     def create_widgets(self):
         """
@@ -121,28 +121,41 @@ class App(tb.Window):
                                      "timer_running": False}
         self.task_timers[task_id]["label"].pack()
 
+        # Create a progress bar for the task
         self.create_progressbar(task_frame, task)
 
-        toggle_button = tb.Button(
+        # Create a button to start or stop the timer
+        toggle_timer_button = tb.Button(
             task_frame, text="Start Timer",
-            command=lambda id=task_id: self.toggle_timer(id)
-        )
-        toggle_button.pack(side="left", padx=(5, 0), pady=(0, 5))
+            # Very interesting way to pass arguments to a function within a lambda function.
+            command=lambda id=task_id: self.toggle_timer(id))
+        toggle_timer_button.pack(side="left", padx=(5, 0), pady=(0, 5))
+
+        # Create a button to remove the task from task area (task data is not removed from json file)
+        remove_task_button = tb.Button(
+            task_frame, text="Remove", command=lambda id=task_id: self.remove_task(id))
+        remove_task_button.pack(side="left", padx=(5, 0), pady=(0, 5))
 
         # Store the button reference
-        self.task_timers[task_id]["toggle_button"] = toggle_button
+        self.task_timers[task_id]["toggle_timer_button"] = toggle_timer_button
 
         # Create a checkbox for each task
-        if task["completed"]:
-            checkmark = tk.BooleanVar(value=True)
-            print("task completed")
-        else:
-            checkmark = tk.BooleanVar(value=False)
-            print("task not completed")
         checkbox = tk.Checkbutton(
-            task_frame, text="Completed", variable=checkmark)
+            task_frame, text="Completed", onvalue=True, offvalue=False, command=lambda: jsontasks.update_task_completed(task_id))
+        if task["completed"]:
+            checkbox.select()
+        else:
+            checkbox.deselect()
         checkbox.pack(side="right")
 
+    def remove_task(self, task_id):
+        """
+        Removes a task.
+
+        This method removes a task from the tasks module and updates the display.
+        """
+        jsontasks.remove_task(task_id)
+        
 
     def create_progressbar(self, task_frame, task):
         """
@@ -162,8 +175,10 @@ class App(tb.Window):
         time_goal = datetime.strptime(task["time_goal"], "%H:%M:%S")
         time_elapsed = datetime.strptime(task["timer"], "%H:%M:%S")
 
-        time_goal_deltaed = (((timedelta(hours=time_elapsed.hour, minutes=time_elapsed.minute, seconds=time_elapsed.second).total_seconds()) * 100))
-        time_elapsed_deltaed = (((timedelta(hours=time_goal.hour, minutes=time_goal.minute, seconds=time_goal.second).total_seconds()) * 100))
+        time_goal_deltaed = (((timedelta(hours=time_elapsed.hour, minutes=time_elapsed.minute,
+                             seconds=time_elapsed.second).total_seconds()) * 100))
+        time_elapsed_deltaed = (((timedelta(
+            hours=time_goal.hour, minutes=time_goal.minute, seconds=time_goal.second).total_seconds()) * 100))
 
         print(f"goal:{time_goal_deltaed}")
         print(f"elapsed:{time_elapsed_deltaed}")
@@ -172,12 +187,13 @@ class App(tb.Window):
             if time_goal_deltaed >= time_elapsed_deltaed:
                 self.progressbars[task_id]["value"] = 100
             else:
-                self.progressbars[task_id]["value"] = (time_goal_deltaed / time_elapsed_deltaed) * 100
+                self.progressbars[task_id]["value"] = (
+                    time_goal_deltaed / time_elapsed_deltaed) * 100
         elif time_goal_deltaed > 0:
             self.progressbars[task_id]["value"] = 100
         else:
             self.progressbars[task_id]["value"] = 0
-        
+
     def update_display(self):
         """
         Updates the display of tasks.
@@ -201,10 +217,14 @@ class App(tb.Window):
 
         # Create and pack new tasks inside the task_frame_area with checkboxes inside there frame
         for task in jsontasks.read_tasks():
-            self.create_task_widget(task)
+            if task["show"] == False:
+                
+                continue
+            else:
+                self.create_task_widget(task)
 
         self.update_timer()
-        
+
         # Scroll to the bottom of the scroll area
         if self.first_time:
             self.first_time = False
@@ -225,7 +245,7 @@ class App(tb.Window):
             timer["timer_running"] = False
             timer["elapsed_time"] += datetime.now() - timer["start_time"]
             timer["start_time"] = None
-            timer["toggle_button"].config(text="Start Timer")
+            timer["toggle_timer_button"].config(text="Start Timer")
 
             jsontasks.update_task_time(task_id, str(
                 timer["elapsed_time"]).split('.')[0])
@@ -238,10 +258,10 @@ class App(tb.Window):
                 elapsed_time_from_task = timedelta(
                     hours=elapsed_time_from_task.hour, minutes=elapsed_time_from_task.minute, seconds=elapsed_time_from_task.second)
             timer["elapsed_time"] = elapsed_time_from_task
-            timer["toggle_button"].config(text="Stop Timer")
+            timer["toggle_timer_button"].config(text="Stop Timer")
             jsontasks.update_task_time(task_id, str(
                 timer["elapsed_time"]).split('.')[0])
-            
+
     def update_timer(self):
         """
         Updates the timer labels for each task.
@@ -257,14 +277,17 @@ class App(tb.Window):
                 total_duration = current_duration + timer["elapsed_time"]
                 formatted_duration = str(total_duration).split('.')[0]
                 timer["label"].config(text=formatted_duration)
-                time_goal = datetime.strptime(tasks[i-1]["time_goal"], "%H:%M:%S")
-                time_goal_deltaed = ((timedelta(hours=time_goal.hour, minutes=time_goal.minute, seconds=time_goal.second).total_seconds()))
+                time_goal = datetime.strptime(
+                    tasks[i-1]["time_goal"], "%H:%M:%S")
+                time_goal_deltaed = ((timedelta(
+                    hours=time_goal.hour, minutes=time_goal.minute, seconds=time_goal.second).total_seconds()))
                 total_duration_deltaed = total_duration.total_seconds()
 
                 if time_goal_deltaed <= total_duration_deltaed:
                     self.progressbars[i]["value"] = 100
                 else:
-                    self.progressbars[i]["value"] = (total_duration_deltaed / time_goal_deltaed)*100
+                    self.progressbars[i]["value"] = (
+                        total_duration_deltaed / time_goal_deltaed)*100
                 # print(f"time_goal: {time_goal}")
                 # print(f"goal:{time_goal_deltaed}")
                 # print(f"duration: {total_duration_deltaed}")
@@ -301,15 +324,6 @@ class App(tb.Window):
                     self.popup_label_active = True
                     self.after(5000, lambda: (popup_label.config(
                         text=""), setattr(self, "popup_label_active", False)))
-
-    # def remove_popup(self, label):
-    #     """
-    #     Removes the error message popup.
-
-    #     This method removes the error message label from the main window.
-    #     """
-    #     label.config(text="")
-    #     self.popup_label_active = False
 
 
 def on_quit():
