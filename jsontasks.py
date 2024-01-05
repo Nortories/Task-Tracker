@@ -15,7 +15,7 @@ def check_task_file():
     return
 
 
-def add_task(title, description):
+def add_task(title, description ,goal_time):
     check_task_file()
     # Check if the file exists
     if os.path.exists(file_path):
@@ -27,6 +27,9 @@ def add_task(title, description):
         # Get the taskID of the last task
         last_task = tasks[-1] if tasks else None
         last_task_id = last_task["taskID"] if last_task else 0
+
+        ## TODO - make method to convert goal time and catch errors
+        # goal_time
 
         # Create a new task
         new_task = {
