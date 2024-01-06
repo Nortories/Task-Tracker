@@ -18,6 +18,7 @@ git clone https://github.com/Nortories/Task-Tracker
 cd [Your Repository Directory]
 pip install ttkbootstrap
 ```
+Additionally, you can also open the application from the current executable build in the 'current build' folder.
 
 ## Usage
 To run Task Tracker, navigate to the cloned repository's directory and execute:
