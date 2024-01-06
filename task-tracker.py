@@ -166,7 +166,7 @@ class App(tb.Window):
         task_id = task["taskID"]
         self.progressbars[task_id] = tb.Progressbar(
             task_frame,
-            bootstyle="success-striped",
+            bootstyle="warning-striped",
             mode="determinate",
             value=101
         )
@@ -285,6 +285,7 @@ class App(tb.Window):
 
                 if time_goal_deltaed <= total_duration_deltaed:
                     self.progressbars[i]["value"] = 100
+                    self.progressbars[i].config(bootstyle ="success-striped")
                 else:
                     self.progressbars[i]["value"] = (
                         total_duration_deltaed / time_goal_deltaed)*100
