@@ -1,0 +1,31 @@
+{
+  "tasks": [
+    {
+      "title": "Buy groceries",
+      "description": "Go to the supermarket and buy fruits, vegetables, and milk.",
+      "taskID": 1,
+      "timer": "0:00:38",
+      "time_goal": "00:00:10",
+      "completed": false,
+      "show": true
+    },
+    {
+      "title": "Finish coding assignment",
+      "description": "Complete the coding assignment by implementing the required features.",
+      "taskID": 2,
+      "timer": "0:00:25",
+      "time_goal": "00:01:00",
+      "completed": false,
+      "show": true
+    },
+    {
+      "title": "Call mom",
+      "description": "Call your mom.",
+      "taskID": 3,
+      "timer": "1:01:13",
+      "time_goal": "1:02:00",
+      "completed": false,
+      "show": true
+    }
+  ]
+}
