@@ -155,6 +155,8 @@ class App(tb.Window):
         This method removes a task from the tasks module and updates the display.
         """
         jsontasks.remove_task(task_id)
+        self.task_timers.pop(task_id)
+        self.update_display()
         
 
     def create_progressbar(self, task_frame, task):
